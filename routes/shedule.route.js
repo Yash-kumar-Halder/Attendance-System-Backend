@@ -1,0 +1,10 @@
+import express from 'express';
+import { setWeeklyShedule } from '../controllers/weeklyShedule.controller.js';
+
+const router = express.Router();
+
+// Route to set a weekly schedule
+router.post('/set', setWeeklyShedule);
+
+// Export the router to be used in the main app
+export default router;
