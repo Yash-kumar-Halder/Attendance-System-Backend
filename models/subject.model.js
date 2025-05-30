@@ -1,11 +1,20 @@
 import mongoose from "mongoose";
-import User from "./user.model";
+import User from "./user.model.js";
 
 // models/Subject.js
 const subjectSchema = new mongoose.Schema({
-	name: { type: String, required: true }, // e.g. "Operating Systems"
-	code: { type: String, required: true }, // e.g. "OS101"
-	teacher: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional
+	name: {
+		type: String,
+		required: true,
+	}, // e.g. "Operating Systems"
+	code: {
+		type: String,
+		required: true,
+	}, // e.g. "OS101"
+	teacher: {
+		type: String,
+		required: true,
+	}
 });
 
 const Subject = mongoose.model("Subject", subjectSchema);
