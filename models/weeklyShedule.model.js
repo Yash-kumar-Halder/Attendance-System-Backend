@@ -10,8 +10,7 @@ const weeklyScheduleSchema = new mongoose.Schema({
 			"Wednesday",
 			"Thursday",
 			"Friday",
-			"Saturday",
-			"Sunday",
+			"Saturday"
 		],
 		required: true,
 	},
