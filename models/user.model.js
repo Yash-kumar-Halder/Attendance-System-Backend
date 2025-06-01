@@ -24,12 +24,11 @@ const userSchema = new mongoose.Schema(
 		},
 		password: {
 			type: String,
-			required: true,
-			minlength: [6, "Password must be at least 6 characters long"],
+			required: true
 		},
 		role: {
 			type: String,
-			enum: ["user", "admin"],
+			enum: ["student", "teacher"],
 			default: "user",
 		},
 		department: {
@@ -37,17 +36,17 @@ const userSchema = new mongoose.Schema(
 			enum: ["CST", "CFS", "EE", "ID", "MTR"],
 			validate: {
 				validator: function (value) {
-					return this.role === "admin" || value;
+					return this.role === "teacher" || value;
 				},
 				message: "Department is required for users",
 			},
 		},
 		semester: {
 			type: String,
-			enum: ["1", "2", "3", "4", "5", "6"],
+			enum: ["1st", "2nd", "3rd", "4th", "5th", "6th"],
 			validate: {
 				validator: function (value) {
-					return this.role === "admin" || value;
+					return this.role === "teacher" || value;
 				},
 				message: "Semester is required for users",
 			},
@@ -57,7 +56,7 @@ const userSchema = new mongoose.Schema(
 			trim: true,
 			validate: {
 				validator: function (value) {
-					return this.role === "admin" || value;
+					return this.role === "teacher" || value;
 				},
 				message: "Registration number is required for users",
 			},

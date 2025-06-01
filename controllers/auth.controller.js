@@ -17,9 +17,27 @@ export const registerUser = async (req, res) => {
 			return res.status(400).json({ message: "All fields are required" });
 		}
 
-		const existingUser = await User.findOne({ email });
-		if (existingUser) {
-			return res.status(400).json({ message: "User already exists" });
+		const existingEmail = await User.findOne({ email });
+		if (existingEmail) {
+			return res
+				.status(400)
+				.json({ message: "User already exists with this email." });
+		}
+
+		const existingPhoneNo = await User.findOne({ phoneNo });
+		if (existingPhoneNo) {
+			return res
+				.status(400)
+				.json({ message: "User already exists with this phone number." });
+		}
+
+		if (role == "student") {
+			const existingRegNo = await User.findOne({ regNo });
+			if (existingRegNo) {
+				return res.status(400).json({
+					message: "User already exists with this reg number.",
+				});
+			}
 		}
 
 		// Validate student-only fields if role is "user"
@@ -37,10 +55,10 @@ export const registerUser = async (req, res) => {
 			email,
 			phoneNo,
 			password,
-			role: role || "user", // Default to 'user' if not provided
-			department: role === "user" ? department : undefined, // Only set if role is 'user'
-			semester: role === "user" ? semester : undefined, // Only set if role is 'user'
-			regNo: role === "user" ? regNo : undefined, // Only set if role is 'user'
+			role: role || "student", // Default to 'student' if not provided
+			department: role === "student" ? department : undefined, // Only set if role is 'student'
+			semester: role === "student" ? semester : undefined, // Only set if role is 'student'
+			regNo: role === "student" ? regNo : undefined, // Only set if role is 'student'
 		});
 		await newUser.save();
 
