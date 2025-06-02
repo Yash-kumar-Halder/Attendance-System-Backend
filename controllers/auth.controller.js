@@ -14,27 +14,33 @@ export const registerUser = async (req, res) => {
 		} = req.body;
 
 		if (!name || !email || !phoneNo || !password) {
-			return res.status(400).json({ message: "All fields are required" });
+			return res.status(400).json({
+				success: false,
+				message: "All fields are required",
+			});
 		}
 
 		const existingEmail = await User.findOne({ email });
 		if (existingEmail) {
-			return res
-				.status(400)
-				.json({ message: "User already exists with this email." });
+			return res.status(400).json({
+				success: false,
+				message: "User already exists with this email.",
+			});
 		}
 
 		const existingPhoneNo = await User.findOne({ phoneNo });
 		if (existingPhoneNo) {
-			return res
-				.status(400)
-				.json({ message: "User already exists with this phone number." });
+			return res.status(400).json({
+				success: false,
+				message: "User already exists with this phone number.",
+			});
 		}
 
 		if (role == "student") {
 			const existingRegNo = await User.findOne({ regNo });
 			if (existingRegNo) {
 				return res.status(400).json({
+					success: false,
 					message: "User already exists with this reg number.",
 				});
 			}
@@ -44,6 +50,7 @@ export const registerUser = async (req, res) => {
 		if (role === "user") {
 			if (!department || !semester || !regNo) {
 				return res.status(400).json({
+					success: false,
 					message:
 						"Department, semester, and registration number are required for students",
 				});
@@ -74,6 +81,7 @@ export const registerUser = async (req, res) => {
 		})
 			.status(201)
 			.json({
+				success: true,
 				message: "User registered successfully",
 				accessToken,
 				user: newUser.getPublicProfile(),
@@ -88,30 +96,39 @@ export const loginUser = async (req, res) => {
 	try {
 		const { email, password } = req.body;
 		if (!email || !password) {
-			return res
-				.status(400)
-				.json({ message: "Email and password are required" });
+			return res.status(400).json({
+				success: false,
+				message: "All credentials are required",
+			});
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(401).json({ message: "Invalid credentioals." });
+			return res.status(401).json({
+				success: false,
+				message: "Invalid credentials.",
+			});
 		}
 		const isPasswordMatch = await user.comparePassword(password);
 		if (!isPasswordMatch) {
-			return res.status(401).json({ message: "Invalid credentioals." });
+			return res.status(401).json({
+				success: false,
+				message: "Invalid credentials.",
+			});
 		}
 
 		// Set refresh token and access token
 		const refreshToken = user.generateRefreshToken();
 		const accessToken = user.generateAccessToken();
-		res.cookie("refreshToken", refreshToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "Strict",
-			maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-		})
+		return res
+			.cookie("refreshToken", refreshToken, {
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "Strict",
+				maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+			})
 			.status(200)
 			.json({
+				success: true,
 				message: "Login successful",
 				accessToken,
 				user: user.getPublicProfile(),
@@ -130,9 +147,15 @@ export const logoutUser = async (req, res) => {
 			sameSite: "Strict",
 		})
 			.status(200)
-			.json({ message: "Logout successful" });
+			.json({
+				success: true,
+				message: "Logout successful",
+			});
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ message: "Server error" });
+		res.status(500).json({
+			success: false,
+			message: "Server error",
+		});
 	}
 };
