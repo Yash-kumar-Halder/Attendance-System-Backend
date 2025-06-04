@@ -3,7 +3,7 @@ import User from "./user.model.js";
 
 // models/Subject.js
 const subjectSchema = new mongoose.Schema({
-	name: {
+	subject: {
 		type: String,
 		required: true,
 	}, // e.g. "Operating Systems"
