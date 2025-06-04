@@ -2,8 +2,8 @@ import Subject from "../models/subject.model.js";
 
 export const setSubject = async (req, res) => {
 	try {
-		const { subject, code, teacher } = req.body;
-		if (!subject || !code || !teacher) {
+		const { subject, code, teacher, department, semester } = req.body;
+		if (!subject || !code || !teacher || !department || !semester) {
 			return res.status(400).json({ message: "All fields are required" });
 		}
 
@@ -15,6 +15,8 @@ export const setSubject = async (req, res) => {
 			subject,
 			code,
 			teacher,
+			department,
+			semester
 		});
 		await newSubject.save();
 		res.status(201).json({
