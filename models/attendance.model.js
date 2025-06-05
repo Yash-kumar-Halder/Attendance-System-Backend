@@ -31,7 +31,7 @@ const attendanceSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
-});
+}, {timestamps: true});
 
 attendanceSchema.index(
 	{ student: 1, date: 1, scheduleSlot: 1 },
