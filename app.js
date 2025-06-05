@@ -12,14 +12,15 @@ const app = express();
 dotenv.config();
 // Enable CORS for all routes
 app.use(
-    cors({
-        origin: "*"
-    })
+	cors({
+		origin: "http://localhost:5173", // ✅ your frontend URL
+		credentials: true,
+	})
 );
 
+app.use(cookieParser());
 app.use(express.json({ limit: "16kb" }));
 app.use(urlencoded({ extended: true, limit: "16kb" }));
-app.use(cookieParser());
 app.use(express.static("public"));
 
 app.use("/api/v1/auth", authRoutes);

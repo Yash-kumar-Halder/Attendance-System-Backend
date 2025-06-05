@@ -121,10 +121,10 @@ export const loginUser = async (req, res) => {
 		const accessToken = user.generateAccessToken();
 		return res
 			.cookie("refreshToken", refreshToken, {
-				httpOnly: true,
-				secure: process.env.NODE_ENV === "production",
-				sameSite: "Strict",
-				maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+				httpOnly: true, // ✅ Secure against XSS (recommended)
+				secure: false, // ✅ Required for HTTP (localhost) — only use `true` for HTTPS
+				sameSite: "Lax", // ✅ Works for most same-site or localhost setups
+				maxAge: 30 * 24 * 60 * 60 * 1000, // ✅ 30 days
 			})
 			.status(200)
 			.json({
