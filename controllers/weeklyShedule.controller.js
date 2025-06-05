@@ -38,3 +38,20 @@ export const setWeeklyShedule = (req, res) => {
 			res.status(500).json({ error: "Internal server error" });
 		});
 };
+
+export const getAllScheduleSubjects = async (req, res) => {
+	try {
+		if (req.user.role !== "teacher") {
+			return res.status(403).json({ message: "Access denied" });
+		}
+
+		const scheduleClasses = await WeeklySchedule.find().sort(); // newest first and  fetches all documents
+		res.status(200).json({
+			success: true,
+			scheduleClasses,
+		});
+	} catch (error) {
+		console.error("Error setting schedule:", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
