@@ -28,6 +28,7 @@ export const setWeeklyShedule = (req, res) => {
 	WeeklySchedule.create(newWeeklySchedule)
 		.then((schedule) => {
 			res.status(201).json({
+				success: true,
 				message: "Weekly schedule created successfully",
 				schedule,
 			});
