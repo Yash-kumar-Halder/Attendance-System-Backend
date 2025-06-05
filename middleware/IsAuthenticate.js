@@ -3,7 +3,7 @@ import { refreshTokenController } from "../controllers/RenewAccessToken.controll
 
 export const isAuthenticated = (req, res, next) => {
 	const authHeader = req.headers.authorization;
-	console.log("Header token:", authHeader);
+	// console.log("Header token:", authHeader);
 
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
 		return res
