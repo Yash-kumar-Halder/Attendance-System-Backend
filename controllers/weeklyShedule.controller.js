@@ -45,7 +45,8 @@ export const getAllScheduleSubjects = async (req, res) => {
 			return res.status(403).json({ message: "Access denied" });
 		}
 
-		const scheduleClasses = await WeeklySchedule.find().sort(); // newest first and  fetches all documents
+		const scheduleClasses = await WeeklySchedule.find().populate("subject");
+
 		res.status(200).json({
 			success: true,
 			scheduleClasses,
@@ -55,3 +56,4 @@ export const getAllScheduleSubjects = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
+
