@@ -33,9 +33,9 @@ export const setSubject = async (req, res) => {
 
 export const getAllSubject = async (req, res) => {
 	try {
-		if (req.user.role !== "teacher") {
-			return res.status(403).json({ message: "Access denied" });
-		}
+		// if (req.user.role !== "teacher") {
+		// 	return res.status(403).json({ message: "Access denied" });
+		// }
 
 		const subjects = await Subject.find().sort({ createdAt: -1 }); // newest first and  fetches all documents
 		res.status(200).json({
