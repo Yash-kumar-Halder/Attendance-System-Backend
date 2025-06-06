@@ -42,9 +42,9 @@ export const setWeeklyShedule = (req, res) => {
 
 export const getAllScheduleSubjects = async (req, res) => {
 	try {
-		if (req.user.role !== "teacher") {
-			return res.status(403).json({ message: "Access denied" });
-		}
+		// if (req.user.role !== "teacher") {
+		// 	return res.status(403).json({ message: "Access denied" });
+		// }
 
 		const scheduleClasses = await WeeklySchedule.find().populate("subject");
 
