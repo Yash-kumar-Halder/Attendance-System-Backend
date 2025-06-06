@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 
 export const refreshTokenController = (req, res) => {
 	const refreshToken = req.cookies.refreshToken;
-	console.log(refreshToken)
 
 	if (!refreshToken) {
 		return res.status(401).json({
@@ -26,7 +25,7 @@ export const refreshTokenController = (req, res) => {
 			payload,
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "15m",
+				expiresIn: "30m",
 			}
 		);
 
