@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import WeeklySchedule from "../models/weeklyShedule.model.js";
 import { timeToNumber } from "../utils/TimeToNumber.js";
-import User from "../models/user.model.js"
+import User from "../models/user.model.js";
 
 export const setWeeklyShedule = (req, res) => {
 	const { day, startTime, endTime, subject } = req.body;
@@ -100,4 +100,3 @@ export const getStudentScheduleSubjects = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
-
