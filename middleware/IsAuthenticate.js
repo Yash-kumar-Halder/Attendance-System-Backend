@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { refreshTokenController } from "../controllers/RenewAccessToken.controller.js";
 
 export const isAuthenticated = (req, res, next) => {
 	const authHeader = req.headers.authorization;
