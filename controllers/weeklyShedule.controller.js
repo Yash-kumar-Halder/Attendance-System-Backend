@@ -72,7 +72,7 @@ export const getStudentScheduleSubjects = async (req, res) => {
 	}
 
 	try {
-		const user = await User.findById(userId);
+		const user = await User.findOne(userId);
 		const { department, semester } = user;
 
 		if (!department || !semester) {
