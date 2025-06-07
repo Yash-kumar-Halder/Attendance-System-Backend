@@ -16,17 +16,16 @@ export const refreshTokenController = (req, res) => {
 			process.env.REFRESH_TOKEN_SECRET
 		);
 
+		// ✅ Fix key here
 		const payload = {
-			id: decoded.id,
+			userId: decoded.userId,
 			role: decoded.role,
 		};
 
 		const newAccessToken = jwt.sign(
 			payload,
 			process.env.ACCESS_TOKEN_SECRET,
-			{
-				expiresIn: "30m",
-			}
+			{ expiresIn: "30m" }
 		);
 
 		return res.status(200).json({
@@ -38,7 +37,7 @@ export const refreshTokenController = (req, res) => {
 		console.error("Refresh token error:", error);
 		return res.status(403).json({
 			success: false,
-			message: "Invalid or expired refresh tokennnnnnn",
+			message: "Invalid or expired refresh token",
 		});
 	}
 };
