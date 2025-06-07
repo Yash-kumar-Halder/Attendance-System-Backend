@@ -1,5 +1,6 @@
 import Subject from "../models/subject.model.js";
-import User from "../models/user.model.js"
+import User from "../models/user.model.js";
+import WeeklySchedule from "../models/weeklyShedule.model.js";
 
 export const setSubject = async (req, res) => {
 	try {
@@ -50,12 +51,16 @@ export const getAllSubject = async (req, res) => {
 
 export const getAllStudentSubject = async (req, res) => {
 	if (!req.user) {
-		return res.status(401).json({ message: "Unauthorized" });
+		return res.status(401).json({
+			success: false,
+			message: "Unauthorized",
+		});
 	}
 	const { userId, role } = req.user;
 
 	if (role === "teacher") {
 		return res.status(403).json({
+			success: false,
 			message:
 				"Access denied: Teachers are not allowed to access this resource.",
 		});
@@ -66,19 +71,23 @@ export const getAllStudentSubject = async (req, res) => {
 		const { department, semester } = user;
 
 		if (!department || !semester) {
-			return res
-				.status(400)
-				.json({ message: "Department and semester are required." });
+			return res.status(400).json({
+				success: false,
+				message: "Department and semester are required.",
+			});
 		}
 
-		const subjects = await Subject.find({department, semester});
+		const subjects = await Subject.find({ department, semester });
 		res.status(200).json({
 			success: true,
 			subjects,
 		});
 	} catch (error) {
 		console.error("Error setting subject:", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
 	}
 };
 
@@ -95,6 +104,7 @@ export const deleteSubject = async (req, res) => {
 				message: "Subject not found",
 			});
 		}
+		await WeeklySchedule.deleteMany({ subject: subjectId });
 
 		// Fetch updated subjects list
 		const subjects = await Subject.find();

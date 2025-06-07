@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import User from "./user.model.js";
 
 // models/Subject.js
 const subjectSchema = new mongoose.Schema(

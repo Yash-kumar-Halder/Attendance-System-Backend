@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import WeeklySchedule from "../models/weeklyShedule.model.js";
 import { timeToNumber } from "../utils/TimeToNumber.js";
 import User from "../models/user.model.js";
@@ -57,7 +56,7 @@ export const getAllScheduleSubjects = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
-export const getStudentScheduleSubjects = async (req, res) => {
+export const getStudentScheduleSubjects = async (req, res) => {;
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
 	}
@@ -91,7 +90,7 @@ export const getStudentScheduleSubjects = async (req, res) => {
 			(s) => s.subject !== null
 		);
 
-		res.status(200).json({
+		return res.status(200).json({
 			success: true,
 			scheduleClasses: filteredSchedules,
 		});
@@ -100,3 +99,5 @@ export const getStudentScheduleSubjects = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
+
+
