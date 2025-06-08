@@ -24,6 +24,5 @@ const cancelledClassSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-
 const CancelledClass = mongoose.model("CancelledClass", cancelledClassSchema);
 export default CancelledClass;

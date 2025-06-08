@@ -5,6 +5,7 @@ import weeklyScheduleRoutes from "./routes/shedule.route.js";
 import subjectRoutes from "./routes/subject.route.js";
 import userRoutes from "./routes/user.route.js";
 import attendanceRoute from "./routes/attendance.route.js";
+import classesRoute from "./routes/classes.route.js"
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -29,12 +30,13 @@ app.use("/api/v1/shedule", weeklyScheduleRoutes);
 app.use("/api/v1/subject", subjectRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/attendance", attendanceRoute);
+app.use("/api/v1/classes", classesRoute);
 
 app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Welcome to the backend API",
-  });
+	res.status(200).json({
+		success: true,
+		message: "Welcome to the backend API",
+	});
 });
 
 export default app;
