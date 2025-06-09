@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 
-// models/Subject.js
+
 const subjectSchema = new mongoose.Schema(
 	{
 		subject: {
 			type: String,
 			required: true,
-		}, // e.g. "Operating Systems"
+		},
 		code: {
 			type: String,
 			required: true,
-		}, // e.g. "OS101"
+		}, 
 		teacher: {
 			type: String,
 			required: true,

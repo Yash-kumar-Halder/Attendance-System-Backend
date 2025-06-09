@@ -56,7 +56,8 @@ export const getAllScheduleSubjects = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
-export const getStudentScheduleSubjects = async (req, res) => {;
+
+export const getStudentScheduleSubjects = async (req, res) => {
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
 	}
@@ -100,4 +101,82 @@ export const getStudentScheduleSubjects = async (req, res) => {;
 	}
 };
 
+export const getSubjectSchedules = async (req, res) => {
+	try {
+		const { subjectId } = req.body;
 
+		// Validate subjectId
+		if (!subjectId) {
+			return res
+				.status(400)
+				.json({ success: false, message: "Subject ID is required" });
+		}
+
+		const schedules = await WeeklySchedule.find({ subject: subjectId })
+			.sort({ day: 1, startTime: 1 })
+			.populate("subject", "subject code teacher department semester");
+
+		const formattedSchedules = schedules.map((schedule) => ({
+			scheduleId: schedule._id, // ✅ Include the schedule ID
+			day: schedule.day,
+			startTime: `${Math.floor(schedule.startTime / 60)}:${String(
+				schedule.startTime % 60
+			).padStart(2, "0")}`,
+			endTime: `${Math.floor(schedule.endTime / 60)}:${String(
+				schedule.endTime % 60
+			).padStart(2, "0")}`,
+			duration: `${Math.floor(
+				(schedule.endTime - schedule.startTime) / 60
+			)}h ${(schedule.endTime - schedule.startTime) % 60}m`,
+			subject: schedule.subject,
+		}));
+
+		return res.status(200).json({
+			success: true,
+			message: "Schedule fetched successfully",
+			schedules: formattedSchedules,
+		});
+	} catch (error) {
+		console.error("Get Subject Schedules Error:", error);
+		return res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching subject schedules",
+		});
+	}
+};
+
+export const deleteSchedule = async (req, res) => {
+	try {
+		const { scheduleId } = req.body;
+
+		// Validate
+		if (!scheduleId) {
+			return res.status(400).json({
+				success: false,
+				message: "Schedule ID is required",
+			});
+		}
+
+		// Attempt to delete
+		const deleted = await WeeklySchedule.findByIdAndDelete(scheduleId);
+
+		if (!deleted) {
+			return res.status(404).json({
+				success: false,
+				message: "Schedule not found or already deleted",
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: "Schedule deleted successfully",
+			deletedScheduleId: scheduleId,
+		});
+	} catch (error) {
+		console.error("Delete Schedule Error:", error);
+		return res.status(500).json({
+			success: false,
+			message: "Something went wrong while deleting the schedule",
+		});
+	}
+};
