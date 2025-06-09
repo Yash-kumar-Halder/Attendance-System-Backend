@@ -1,138 +1,148 @@
 // backend/controllers/class.controller.js
-import WeeklySchedule from "../models/weeklyShedule.model.js"
+import WeeklySchedule from "../models/weeklyShedule.model.js";
 import CancelledClass from "../models/cancelledClass.model.js";
-import User from "../models/user.model.js"
-import Subject from "../models/subject.model.js"
+import User from "../models/user.model.js";
+import Subject from "../models/subject.model.js";
 import Attendance from "../models/attendance.model.js";
 
 export const getClassHistory = async (req, res) => {
-    const { userId } = req.user;
+	const { userId } = req.user;
 
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found" });
-        }
+	try {
+		const user = await User.findById(userId);
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: "User not found" });
+		}
 
-        let schedules = await WeeklySchedule.find().populate("subject");
+		let schedules = await WeeklySchedule.find().populate("subject");
 
-        // Filter schedules by department/semester if student
-        if (user.role === "student") {
-            schedules = schedules.filter(
-                (s) =>
-                    s.subject.department === user.department &&
-                    s.subject.semester === user.semester
-            );
-        }
+		// Filter schedules by department/semester if student
+		if (user.role === "student") {
+			schedules = schedules.filter(
+				(s) =>
+					s.subject.department === user.department &&
+					s.subject.semester === user.semester
+			);
+		}
 
-        const today = new Date();
-        // Set today's date to the beginning of the day for accurate comparison
-        today.setHours(0, 0, 0, 0);
+		const today = new Date();
+		// Set today's date to the beginning of the day for accurate comparison
+		today.setHours(0, 0, 0, 0);
 
-        const CLASS_START_DATE = new Date("2025-06-02");
-        CLASS_START_DATE.setHours(0, 0, 0, 0); // Set to beginning of the day
+		// --- START OF CHANGE ---
+		// Updated CLASS_START_DATE to June 7, 2025
+		const CLASS_START_DATE = new Date("2025-06-07");
+		// --- END OF CHANGE ---
 
-        const THIRTY_DAYS_AGO = new Date(
-            today.getTime() - 30 * 24 * 60 * 60 * 1000
-        );
-        THIRTY_DAYS_AGO.setHours(0, 0, 0, 0); // Set to beginning of the day
+		CLASS_START_DATE.setHours(0, 0, 0, 0); // Set to beginning of the day
 
-        const effectiveStartDate =
-            CLASS_START_DATE > THIRTY_DAYS_AGO
-                ? CLASS_START_DATE
-                : THIRTY_DAYS_AGO;
+		const THIRTY_DAYS_AGO = new Date(
+			today.getTime() - 30 * 24 * 60 * 60 * 1000
+		);
+		THIRTY_DAYS_AGO.setHours(0, 0, 0, 0); // Set to beginning of the day
 
-        const cancellations = await CancelledClass.find({
-            date: {
-                $gte: effectiveStartDate,
-                $lte: today,
-            },
-        }).populate("cancelledBy");
+		// The logic for effectiveStartDate remains the same,
+		// it picks the later of CLASS_START_DATE or THIRTY_DAYS_AGO
+		const effectiveStartDate =
+			CLASS_START_DATE > THIRTY_DAYS_AGO
+				? CLASS_START_DATE
+				: THIRTY_DAYS_AGO;
 
-        const cancelledMap = new Map();
-        cancellations.forEach((c) => {
-            // Use ISO date string without time for the key to match `dateStr`
-            cancelledMap.set(
-                `${c.scheduleSlot.toString()}_${c.date.toISOString().slice(0, 10)}`,
-                c
-            );
-        });
+		const cancellations = await CancelledClass.find({
+			date: {
+				$gte: effectiveStartDate,
+				$lte: today,
+			},
+		}).populate("cancelledBy");
 
-        const attendanceRecords = await Attendance.find({
-            student: userId,
-            date: { $gte: effectiveStartDate, $lte: today },
-        });
+		const cancelledMap = new Map();
+		cancellations.forEach((c) => {
+			// Use ISO date string without time for the key to match `dateStr`
+			cancelledMap.set(
+				`${c.scheduleSlot.toString()}_${c.date
+					.toISOString()
+					.slice(0, 10)}`,
+				c
+			);
+		});
 
-        const attendanceMap = new Map();
-        attendanceRecords.forEach((a) => {
-            // Use ISO date string without time for the key to match `dateStr`
-            attendanceMap.set(
-                `${a.scheduleSlot.toString()}_${a.date.toISOString().slice(0, 10)}`,
-                a.status
-            );
-        });
+		const attendanceRecords = await Attendance.find({
+			student: userId,
+			date: { $gte: effectiveStartDate, $lte: today },
+		});
 
-        const pastClasses = [];
+		const attendanceMap = new Map();
+		attendanceRecords.forEach((a) => {
+			// Use ISO date string without time for the key to match `dateStr`
+			attendanceMap.set(
+				`${a.scheduleSlot.toString()}_${a.date
+					.toISOString()
+					.slice(0, 10)}`,
+				a.status
+			);
+		});
 
-        let currentDate = new Date(today);
-        currentDate.setHours(0, 0, 0, 0); // Ensure consistent daily iteration
+		const pastClasses = [];
 
-        while (currentDate >= effectiveStartDate) {
-            const dayName = currentDate.toLocaleDateString("en-US", {
-                weekday: "long",
-            });
-            const dateStr = currentDate.toISOString().slice(0, 10);
+		let currentDate = new Date(today);
+		currentDate.setHours(0, 0, 0, 0); // Ensure consistent daily iteration
 
-            const dailySchedules = schedules.filter((s) => s.day === dayName);
+		while (currentDate >= effectiveStartDate) {
+			const dayName = currentDate.toLocaleDateString("en-US", {
+				weekday: "long",
+			});
+			const dateStr = currentDate.toISOString().slice(0, 10);
 
-            dailySchedules.forEach((slot) => {
-                const key = `${slot._id.toString()}_${dateStr}`;
-                const cancel = cancelledMap.get(key);
-                
-                // Get attendance status directly from the map
-                const attendanceStatus = attendanceMap.get(key);
-                const isPresent = attendanceStatus === "present";
+			const dailySchedules = schedules.filter((s) => s.day === dayName);
 
-                pastClasses.push({
-                    date: dateStr,
-                    day: dayName,
-                    startTime: slot.startTime,
-                    endTime: slot.endTime,
-                    subject: slot.subject.subject,
-                    code: slot.subject.code,
-                    teacher: slot.subject.teacher,
-                    department: slot.subject.department,
-                    semester: slot.subject.semester,
-                    scheduleSlotId: slot._id,
-                    isCancelled: !!cancel,
-                    reason: cancel?.reason || null,
-                    cancelledBy: cancel?.cancelledBy?.name || null,
-                    isPresent: isPresent, // Pass the determined isPresent value
-                });
-            });
+			dailySchedules.forEach((slot) => {
+				const key = `${slot._id.toString()}_${dateStr}`;
+				const cancel = cancelledMap.get(key);
 
-            currentDate.setDate(currentDate.getDate() - 1);
-        }
-        
-        // Sort pastClasses from oldest to newest for better display
-        pastClasses.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (dateA.getTime() === dateB.getTime()) {
-                return a.startTime - b.startTime;
-            }
-            return dateB.getTime() - dateA.getTime(); // Newest first
-        });
+				// Get attendance status directly from the map
+				const attendanceStatus = attendanceMap.get(key);
+				const isPresent = attendanceStatus === "present";
 
-        return res.status(200).json({ success: true, pastClasses });
-    } catch (err) {
-        console.error(err);
-        return res
-            .status(500)
-            .json({ success: false, message: "Server Error" });
-    }
+				pastClasses.push({
+					date: dateStr,
+					day: dayName,
+					startTime: slot.startTime,
+					endTime: slot.endTime,
+					subject: slot.subject.subject,
+					code: slot.subject.code,
+					teacher: slot.subject.teacher,
+					department: slot.subject.department,
+					semester: slot.subject.semester,
+					scheduleSlotId: slot._id,
+					isCancelled: !!cancel,
+					reason: cancel?.reason || null,
+					cancelledBy: cancel?.cancelledBy?.name || null,
+					isPresent: isPresent, // Pass the determined isPresent value
+				});
+			});
+
+			currentDate.setDate(currentDate.getDate() - 1);
+		}
+
+		// Sort pastClasses from newest to oldest for better display in the frontend
+		pastClasses.sort((a, b) => {
+			const dateA = new Date(a.date);
+			const dateB = new Date(b.date);
+			if (dateA.getTime() === dateB.getTime()) {
+				return a.startTime - b.startTime;
+			}
+			return dateB.getTime() - dateA.getTime(); // Newest first
+		});
+
+		return res.status(200).json({ success: true, pastClasses });
+	} catch (err) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ success: false, message: "Server Error" });
+	}
 };
 
 const getUpcomingClassesInternal = async () => {
@@ -161,7 +171,7 @@ const getUpcomingClassesInternal = async () => {
 		cancelledDict[key] = c;
 	});
 
-	console.log(cancelledDict)
+	console.log(cancelledDict);
 
 	const upcomingClasses = [];
 	let currentDate = new Date(today);
@@ -281,6 +291,7 @@ export const getUpcomingClasses = async (req, res) => {
 };
 
 export const totalClassesTaken = async (req, res) => {
+	console.log("Hited");
 	try {
 		const user = await User.findById(req.user.userId);
 		if (!user) {
@@ -288,43 +299,119 @@ export const totalClassesTaken = async (req, res) => {
 				.status(404)
 				.json({ success: false, message: "User not found" });
 		}
-		const { department, semester } = user;
 
-		// Step 1: Get all subjects for department and semester
-		const subjects = await Subject.find({ department, semester });
-		const subjectIds = subjects.map((sub) => sub._id);
+		// --- Date Range Logic (aligned with getClassHistory) ---
+		const today = new Date();
+		today.setHours(0, 0, 0, 0); // Normalize to start of today
 
-		// Step 2: Get all weekly schedules for those subjects
-		const weeklySchedules = await WeeklySchedule.find({
-			subject: { $in: subjectIds },
+		const CLASS_START_DATE = new Date("2025-06-07"); // As requested: June 7, 2025
+		CLASS_START_DATE.setHours(0, 0, 0, 0); // Normalize to start of the date
+
+		const THIRTY_DAYS_AGO = new Date(
+			today.getTime() - 30 * 24 * 60 * 60 * 1000
+		);
+		THIRTY_DAYS_AGO.setHours(0, 0, 0, 0); // Normalize to start of the date
+
+		// The effective start date is the later of CLASS_START_DATE or 30 days ago
+		const effectiveStartDate =
+			CLASS_START_DATE > THIRTY_DAYS_AGO
+				? CLASS_START_DATE
+				: THIRTY_DAYS_AGO;
+		// --- End Date Range Logic ---
+
+		// Determine the weekly schedules relevant to the current user (student or teacher)
+		let relevantSchedules = [];
+		if (user.role === "student") {
+			// Students see schedules for subjects in their department and semester
+			const subjects = await Subject.find({
+				department: user.department,
+				semester: user.semester,
+			});
+			const subjectIds = subjects.map((sub) => sub._id);
+			relevantSchedules = await WeeklySchedule.find({
+				subject: { $in: subjectIds },
+			});
+		} else if (user.role === "teacher") {
+			// Teachers see only the schedules they are assigned to teach
+			// IMPORTANT: Ensure your WeeklySchedule schema has a 'teacher' field
+			// that stores the ObjectId of the User who is the teacher for that slot.
+			relevantSchedules = await WeeklySchedule.find({
+				teacher: req.user.userId,
+			});
+		} else {
+			// If there are other roles not covered, you might want to return an error
+			return res.status(403).json({
+				success: false,
+				message: "Access denied. Role not authorized for this action.",
+			});
+		}
+
+		// Fetch all cancellations within the effective date range
+		// We only need the scheduleSlot ID and the date to check for cancellations
+		const cancellations = await CancelledClass.find({
+			date: {
+				$gte: effectiveStartDate,
+				$lte: today,
+			},
 		});
-		const scheduleIds = weeklySchedules.map((ws) => ws._id);
 
-		// Step 3: Count how many were cancelled
-		const cancelled = await CancelledClass.find({
-			scheduleSlot: { $in: scheduleIds },
+		// Create a map for quick lookup of cancelled classes by scheduleSlotId and date
+		const cancelledMap = new Map();
+		cancellations.forEach((c) => {
+			const dateStr = c.date.toISOString().slice(0, 10); // Format date to YYYY-MM-DD
+			const key = `${c.scheduleSlot.toString()}_${dateStr}`;
+			cancelledMap.set(key, true); // Value can be anything, we just need the key's presence
 		});
 
-		// Step 4: Calculate total classes taken
-		const totalScheduled = scheduleIds.length;
-		const totalCancelled = cancelled.length;
-		const totalTaken = totalScheduled - totalCancelled;
+		let totalScheduledOccurrences = 0; // Counts every potential class instance in the range
+		let totalClassesActuallyTaken = 0; // Counts classes that were scheduled AND not cancelled
+
+		// Loop through each day from effectiveStartDate to today to count class occurrences
+		let currentDate = new Date(effectiveStartDate);
+		// Loop condition: `currentDate <= today` ensures today's classes are included
+		while (currentDate <= today) {
+			const dayName = currentDate.toLocaleDateString("en-US", {
+				weekday: "long",
+			});
+			const dateStr = currentDate.toISOString().slice(0, 10);
+
+			// Find which relevant weekly schedules fall on the current day of the week
+			const dailySchedules = relevantSchedules.filter(
+				(s) => s.day === dayName
+			);
+
+			dailySchedules.forEach((slot) => {
+				const key = `${slot._id.toString()}_${dateStr}`;
+				totalScheduledOccurrences++; // Increment for every potential class occurrence
+
+				// Check if this specific occurrence (scheduleSlotId on this date) was cancelled
+				if (!cancelledMap.has(key)) {
+					totalClassesActuallyTaken++; // If not cancelled, it was "taken"
+				}
+			});
+
+			// Move to the next day
+			currentDate.setDate(currentDate.getDate() + 1);
+		}
+
+		// Calculate total classes cancelled within this range
+		const totalCancelledOccurrences =
+			totalScheduledOccurrences - totalClassesActuallyTaken;
 
 		return res.status(200).json({
 			success: true,
 			data: {
-				department,
-				semester,
-				totalScheduled,
-				totalCancelled,
-				totalTaken,
+				totalScheduled: totalScheduledOccurrences, // Total potential class occurrences in the range
+				totalCancelled: totalCancelledOccurrences, // Total actual cancelled occurrences in the range
+				totalTaken: totalClassesActuallyTaken, // Total actual classes that occurred (not cancelled) in the range
 			},
 		});
 	} catch (error) {
-		console.error("Error: ", error);
+		console.error("Error in totalClassesTaken: ", error);
 		return res.status(500).json({
 			success: false,
-			message: "Internal server error",
+			message: "Internal server error while calculating total classes.",
+			error: error.message,
 		});
 	}
 };
@@ -367,4 +454,3 @@ export const getCancelledClassesForToday = async (req, res) => {
 		});
 	}
 };
-
