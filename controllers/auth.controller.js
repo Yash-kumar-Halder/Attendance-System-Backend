@@ -20,6 +20,17 @@ export const registerUser = async (req, res) => {
 			});
 		}
 
+		// Validate student-only fields if role is "user"
+		if (role === "student") {
+			if (!department || !semester || !regNo) {
+				return res.status(400).json({
+					success: false,
+					message:
+						"Department, semester, and registration number are required for students",
+				});
+			}
+		}
+
 		const existingEmail = await User.findOne({ email });
 		if (existingEmail) {
 			return res.status(400).json({
@@ -42,17 +53,6 @@ export const registerUser = async (req, res) => {
 				return res.status(400).json({
 					success: false,
 					message: "User already exists with this reg number.",
-				});
-			}
-		}
-
-		// Validate student-only fields if role is "user"
-		if (role === "user") {
-			if (!department || !semester || !regNo) {
-				return res.status(400).json({
-					success: false,
-					message:
-						"Department, semester, and registration number are required for students",
 				});
 			}
 		}
@@ -94,7 +94,9 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
 	try {
-		const { email, password } = req.body;
+		console.log(req.body);
+		const { email, password } = req.body.data;
+		console.log(req.body.data)
 		if (!email || !password) {
 			return res.status(400).json({
 				success: false,
@@ -119,6 +121,7 @@ export const loginUser = async (req, res) => {
 		// Set refresh token and access token
 		const refreshToken = user.generateRefreshToken();
 		const accessToken = user.generateAccessToken();
+		console.log(accessToken);
 		return res
 			.cookie("refreshToken", refreshToken, {
 				httpOnly: true, // ✅ Secure against XSS (recommended)

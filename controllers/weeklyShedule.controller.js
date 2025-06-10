@@ -1,6 +1,7 @@
 import WeeklySchedule from "../models/weeklyShedule.model.js";
 import { timeToNumber } from "../utils/TimeToNumber.js";
 import User from "../models/user.model.js";
+import Subject from "../models/subject.model.js"
 
 export const setWeeklyShedule = (req, res) => {
 	const { day, startTime, endTime, subject } = req.body;
@@ -41,21 +42,46 @@ export const setWeeklyShedule = (req, res) => {
 
 export const getAllScheduleSubjects = async (req, res) => {
 	try {
-		// if (req.user.role !== "teacher") {
-		// 	return res.status(403).json({ message: "Access denied" });
-		// }
+		let filter = {};
+		const {userId} = req.user;
+		const user = await User.findOne({_id : userId});
 
-		const scheduleClasses = await WeeklySchedule.find().populate("subject");
+		// If user is not a teacher, restrict by department and semester
+		if (user.role !== "teacher") {
+			if (!user.department || !user.semester) {
+				return res
+					.status(400)
+					.json({ success: false, message: "Missing student info." });
+			}
+
+			// First, find subject IDs matching department & semester
+			const matchingSubjects = await Subject.find({
+				department: user.department,
+				semester: user.semester,
+			}).select("_id");
+
+			const subjectIds = matchingSubjects.map((subj) => subj._id);
+			filter.subject = { $in: subjectIds };
+		}
+
+		// Fetch schedule with appropriate filter and populate subject details
+		const scheduleClasses = await WeeklySchedule.find(filter).populate(
+			"subject"
+		);
 
 		res.status(200).json({
 			success: true,
 			scheduleClasses,
 		});
 	} catch (error) {
-		console.error("Error setting schedule:", error);
-		res.status(500).json({ message: "Internal server error" });
+		console.error("Error fetching schedule:", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
 	}
 };
+
 
 export const getStudentScheduleSubjects = async (req, res) => {
 	if (!req.user) {

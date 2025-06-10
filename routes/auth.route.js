@@ -14,7 +14,7 @@ router.route("/register").post(registerUser);
 // Route to login a user
 router.post("/login", loginUser);
 // Route to logout a user
-router.post("/logout", isAuthenticated, logoutUser);
+router.post("/logout", logoutUser);
 router.get("/refresh-token", refreshTokenController);
 
 // Export the router to be used in the main app
