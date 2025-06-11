@@ -388,7 +388,6 @@ export const cancelClass = async (req, res) => {
 };
 
 export const totalClassesTaken = async (req, res) => {
-	console.log("Hited");
 	try {
 		const user = await User.findById(req.user.userId);
 		if (!user) {
