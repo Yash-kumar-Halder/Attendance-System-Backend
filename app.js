@@ -15,10 +15,11 @@ dotenv.config();
 // Enable CORS for all routes
 app.use(
 	cors({
-		origin: "http://localhost:5173", // ✅ your frontend URL
+		origin: process.env.CORS_ORIGIN,
 		credentials: true,
 	})
 );
+
 
 app.use(cookieParser());
 app.use(express.json({ limit: "16kb" }));
